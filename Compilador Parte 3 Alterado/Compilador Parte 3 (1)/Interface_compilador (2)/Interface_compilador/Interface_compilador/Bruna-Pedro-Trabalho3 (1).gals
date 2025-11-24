@@ -1,0 +1,168 @@
+#Options
+GenerateScanner = true
+GenerateParser = true
+Language = Java
+ScannerName = Lexico
+ParserName = Sintatico
+SemanticName = Semantico
+ScannerCaseSensitive = true
+ScannerTable = Compact
+Input = Stream
+Parser = LL
+#RegularDefinitions
+dig:[0-9]
+mai:[A-Z]
+min:[a-z]
+#Tokens
+id: {min} ({mai} {min} | {min})* ("_"{dig}+)? | {mai} {min}+ ({mai} {min}+)* ("_"{dig}+)?
+ "+"
+Const_int:([1-9]{dig}?{dig}?{dig}?{dig}? | 0)
+Const_float:([1-9]{dig}?{dig}?{dig}?{dig}? | 0) "." (0 | {dig}?{dig}?{dig}?{dig}?[1-9])
+Const_string:\"[^\n\""\"]*\"
+Comentario_linha : %[^\n]*
+Comentario_bloco: "(*"[^\(\*\)]*"*)"
+
+pr_tipoInt = id: "int"
+pr_tipoFloat = id: "float"
+pr_tipoString = id: "string"
+pr_tipoBoolean = id: "bool"
+pr_list = id: "list"
+pr_add = id: "add"
+pr_delete = id: "delete"
+pr_read = id: "read"
+pr_print = id: "print"
+pr_if = id: "if"
+pr_else = id: "else"
+pr_end = id: "end"
+pr_do = id: "do"
+pr_until = id: "until"
+pr_begin = id: "begin"
+pr_and = id: "and"
+pr_or = id: "or"
+pr_not = id: "not"
+pr_count = id: "count"
+pr_size = id: "size"
+pr_elementOf = id: "elementOf"
+pr_true = id: "true"
+pr_false = id: "false"
+
+"<-"
+"="
+","
+")"
+"("
+";"
+"=="
+"<"
+">"
+"+"
+"-"
+"*"
+"/"
+#NonTerminals
+<dec_program>
+<lista_instrucoes>
+<instrucao>
+<comando>
+<tipo>
+<dec_var>
+<tipoSimples>
+<tamanhoLista>
+<lista_identificadores>
+<identificador>
+<Lista>
+<resto_lista>
+<resto_lista2>
+<resto_lista3>
+<resto_lista_expressoes>
+<resto_lista_comandos>
+<comando_id>
+<parte_else>
+<entrada_simples>
+<entrada_complexa>
+<operador_atribuicao>
+<tipo_operacao_lista>
+<expressao>
+<entrada_dados>
+<lista_entradas>
+<saida_dados>
+<lista_expressoes>
+<comando_selecao>
+<lista_comandos>
+<comando_repeticao>
+<elemento>
+<posicao>
+<valor>
+<expressao_>
+<relacional>
+<aritmetica>
+<aritmetica_>
+<relacional_>
+<fator>
+<fator_>
+<termo>
+<termo_>
+<operador_relacional>
+#Grammar
+<dec_program> ::= pr_begin <lista_instrucoes> pr_end ;
+
+<lista_instrucoes> ::= <instrucao> ";" <resto_lista> ;
+<resto_lista> ::=  î | <lista_instrucoes> ;
+
+<instrucao> ::= <dec_var> | <comando>;
+<dec_var> ::= <tipo> <lista_identificadores>;
+<tipo> ::= pr_tipoInt | pr_tipoFloat | pr_tipoString | pr_tipoBoolean | <Lista> ;
+<Lista> ::= pr_list "(" <tipoSimples> "," <tamanhoLista> ")";
+<tipoSimples> ::= pr_tipoInt | pr_tipoFloat | pr_tipoString | pr_tipoBoolean ;
+<tamanhoLista> ::= Const_int ;
+
+<lista_identificadores> ::= <identificador> <resto_lista2> ;
+<resto_lista2> ::= î | "," <lista_identificadores> ;
+
+<identificador> ::= id;
+
+<comando> ::= id <comando_id> | <entrada_dados> |<saida_dados> | <comando_selecao> | <comando_repeticao> ;
+<comando_id> ::= <operador_atribuicao> <expressao> | <tipo_operacao_lista>;
+
+<operador_atribuicao> ::= "=" | "<-" ;
+
+<tipo_operacao_lista> ::= pr_add "("<elemento>","<posicao>")" | pr_delete "("<posicao>")" ;
+
+
+<elemento> ::= <expressao> ;
+<posicao> ::= <expressao> ;
+
+<entrada_dados> ::= pr_read "("<lista_entradas>")" ;
+
+<lista_entradas> ::= <entrada_simples> | <entrada_complexa> ;
+<entrada_simples> ::= id <resto_lista3> ;
+<resto_lista3> ::=  î | "," <lista_entradas> ;
+<entrada_complexa> ::= Const_string "," id <resto_lista3> ;
+
+<saida_dados> ::= pr_print "(" <lista_expressoes>")" ;
+
+<lista_expressoes> ::= <expressao> <resto_lista_expressoes> ;
+<resto_lista_expressoes> ::=  î | "," <lista_expressoes> ;
+
+<comando_selecao> ::= pr_if <expressao> <lista_comandos> <parte_else> ;
+<parte_else> ::= pr_else <lista_comandos> pr_end | pr_end ;
+
+<lista_comandos> ::= <comando> ";" <resto_lista_comandos> ;
+<resto_lista_comandos> ::=  î | <lista_comandos> ;
+
+<comando_repeticao> ::= pr_do <lista_comandos> pr_until <expressao> ;
+
+
+<expressao> ::= <valor> <expressao_> ;
+<expressao_> ::=  î | pr_and <valor> <expressao_> | pr_or <valor> <expressao_> ;
+<valor> ::= <relacional> | pr_true | pr_false | pr_not <valor> ;
+<relacional> ::= <aritmetica> <relacional_> ;
+<relacional_> ::=  î | <operador_relacional> <aritmetica> ;
+<operador_relacional>::= "==" | "<" | ">" ;
+<aritmetica> ::= <termo> <aritmetica_> ;
+<aritmetica_> ::=  î | "+" <termo> <aritmetica_> | "-" <termo> <aritmetica_> ;
+<termo> ::= <fator> <termo_> ;
+<termo_> ::=  î | "*" <fator> <termo_> | "/" <fator> <termo_> ;
+<fator> ::= id <fator_> | Const_int |Const_float | Const_string | "(" <expressao> ")" | "+" <fator> |"-" <fator> ;
+<fator_> ::=  î | pr_count | pr_size | pr_elementOf "(" <expressao> ")" ;
+

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="src" path="Compilador Parte 3 Alterado/Compilador Parte 3 (1)/Interface_compilador (2)/Interface_compilador/Interface_compilador/src"/>
+	<classpathentry kind="output" path="out/production/Compilador-sintatico"/>
+</classpath>
