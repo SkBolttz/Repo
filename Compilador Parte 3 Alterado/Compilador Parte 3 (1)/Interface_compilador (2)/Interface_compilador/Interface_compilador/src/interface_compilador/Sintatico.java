@@ -112,8 +112,24 @@ public class Sintatico implements Constants {
             if (pushProduction(x, tokenInput))
                 return false;
             else {
+                // ✅ DEBUG PERSONALIZADO PARA O CASO 53 - COLOCAR AQUI
+                if (x == 53) { // <lista_identificadores>
+                    System.out.println("=== DEBUG LISTA_IDENTIFICADORES ===");
+                    System.out.println("Token atual: " + currentToken.getLexeme() + " (ID: " + tokenInput + ")");
+                    System.out.println("Previous token: " + (previousToken != null
+                            ? previousToken.getLexeme() + " (ID: " + previousToken.getId() + ")"
+                            : "null"));
+                    System.out.println("tipoVariavelAtual: " + tipoVariavelAtual);
+                }
+
                 String tokenEncontrado = formatarTokenEncontrado(currentToken, 0);
                 String simbolosEsperados = obterSimbolosEsperadosNaoTerminal(x, tokenInput);
+
+                System.out.println("=== DEBUG ERRO ===");
+                System.out.println("Não-terminal: " + x + " (" + PARSER_ERROR[x] + ")");
+                System.out.println("Token encontrado: " + currentToken.getLexeme() + " (ID: " + tokenInput + ")");
+                System.out.println("Pilha atual: " + stack);
+                System.out.println("Posição: " + currentToken.getPosition());
 
                 throw new SyntaticError("encontrado " + tokenEncontrado + " esperado " + simbolosEsperados,
                         currentToken.getPosition());
@@ -125,11 +141,11 @@ public class Sintatico implements Constants {
     }
 
     private boolean isEmContextoEspecifico() {
-        return stack.contains(35) || 
-                stack.contains(59) || 
-                stack.contains(65) || 
-                stack.contains(44) || 
-                stack.contains(58); 
+        return stack.contains(35) ||
+                stack.contains(59) ||
+                stack.contains(65) ||
+                stack.contains(44) ||
+                stack.contains(58);
     }
 
     private void verificarCompatibilidadeConstante() throws SyntaticError {
@@ -218,117 +234,124 @@ public class Sintatico implements Constants {
     }
 
     private String formatarTokenEncontrado(Token token, int tipoEsperado) {
-    if (token == null)
-        return "EOF";
-    int tokenId = token.getId();
-    String lexeme = token.getLexeme();
-
-    boolean emContextoDeclaracao = isEmContextoDeclaracao();
-
-    if (emContextoDeclaracao && isTipoIndividualEsperado(tipoEsperado)) {
-        switch (tokenId) {
-            case t_Const_string:
-                return lexeme;
-            case t_Const_int:
-                return lexeme;
-            case t_Const_float:
-                return lexeme;
-            case t_id:
-                return lexeme;
-            default:
-                return lexeme;
-        }
-    }
-
-    if (isTipoIndividualEsperado(tipoEsperado)) {
-        switch (tokenId) {
-            case t_Const_string:
-                return lexeme;
-            case t_Const_int:
-                return lexeme;
-            case t_Const_float:
-                return lexeme;
-            case t_id:
-                return lexeme;
-            default:
-                return lexeme;
-        }
-    }
-
-    if (isTipoEspecificoEtapa1(tipoEsperado)) {
-        switch (tokenId) {
-            case t_Const_string:
-                return lexeme;
-            case t_Const_int:
-                return lexeme;
-            case t_Const_float:
-                return lexeme;
-            case t_id:
-                return lexeme;
-            default:
-                return lexeme;
-        }
-    }
-
-    switch (tokenId) {
-        case DOLLAR:
+        if (token == null)
             return "EOF";
-        case t_Const_string:
-            return "constante_string";  // Mantém a classe (não está na lista)
-        case t_Const_int:
-            return lexeme;  // MOSTRA LEXEMA (está na lista)
-        case t_Const_float:
-            return lexeme;  // MOSTRA LEXEMA (está na lista)
-        case t_id:
-            return lexeme;  // MOSTRA LEXEMA (está na lista)
-        
-        // Palavras reservadas - MOSTRAM LEXEMA (estão na lista)
-        case t_pr_tipoInt:
-        case t_pr_tipoFloat:
-        case t_pr_tipoString:
-        case t_pr_tipoBoolean:
-        case t_pr_list:
-        case t_pr_begin:
-        case t_pr_end:
-        case t_pr_if:
-        case t_pr_else:
-        case t_pr_do:
-        case t_pr_until:
-        case t_pr_read:
-        case t_pr_print:
-        case t_pr_add:
-        case t_pr_delete:
-        case t_pr_and:
-        case t_pr_or:
-        case t_pr_not:
-        case t_pr_true:
-        case t_pr_false:
-        case t_pr_count:
-        case t_pr_size:
-        case t_pr_elementOf:
-            return lexeme;  // MOSTRA LEXEMA
-        
-        // Símbolos especiais - MOSTRAM LEXEMA (estão na lista)
-        case t_TOKEN_3:   // "+"
-        case t_TOKEN_32:  // "-"
-        case t_TOKEN_33:  // "*"
-        case t_TOKEN_34:  // "/"
-        case t_TOKEN_35:  // "=="
-        case t_TOKEN_36:  // "~="
-        case t_TOKEN_37:  // "<"
-        case t_TOKEN_38:  // ">"
-        case t_TOKEN_39:  // "="
-        case t_TOKEN_40:  // "<-"
-        case t_TOKEN_41:  // "("
-        case t_TOKEN_42:  // ")"
-        case t_TOKEN_43:  // ";"
-        case t_TOKEN_44:  // ","
-            return lexeme;  // MOSTRA LEXEMA
-        
-        default:
-            return lexeme;  // Para outros tokens, mostra lexema
+
+        int tokenId = token.getId();
+
+        // ✅ CORREÇÃO: Se é EOF, sempre retorna "EOF"
+        if (tokenId == DOLLAR) {
+            return "EOF";
+        }
+
+        String lexeme = token.getLexeme();
+
+        boolean emContextoDeclaracao = isEmContextoDeclaracao();
+
+        if (emContextoDeclaracao && isTipoIndividualEsperado(tipoEsperado)) {
+            switch (tokenId) {
+                case t_Const_string:
+                    return lexeme;
+                case t_Const_int:
+                    return lexeme;
+                case t_Const_float:
+                    return lexeme;
+                case t_id:
+                    return lexeme;
+                default:
+                    return lexeme;
+            }
+        }
+
+        if (isTipoIndividualEsperado(tipoEsperado)) {
+            switch (tokenId) {
+                case t_Const_string:
+                    return lexeme;
+                case t_Const_int:
+                    return lexeme;
+                case t_Const_float:
+                    return lexeme;
+                case t_id:
+                    return lexeme;
+                default:
+                    return lexeme;
+            }
+        }
+
+        if (isTipoEspecificoEtapa1(tipoEsperado)) {
+            switch (tokenId) {
+                case t_Const_string:
+                    return lexeme;
+                case t_Const_int:
+                    return lexeme;
+                case t_Const_float:
+                    return lexeme;
+                case t_id:
+                    return lexeme;
+                default:
+                    return lexeme;
+            }
+        }
+
+        switch (tokenId) {
+            case DOLLAR:
+                return "EOF"; // ✅ Já tratado acima, mas mantido por segurança
+            case t_Const_string:
+                return "constante_string";
+            case t_Const_int:
+                return lexeme;
+            case t_Const_float:
+                return lexeme;
+            case t_id:
+                return lexeme;
+
+            // Palavras reservadas - MOSTRAM LEXEMA
+            case t_pr_tipoInt:
+            case t_pr_tipoFloat:
+            case t_pr_tipoString:
+            case t_pr_tipoBoolean:
+            case t_pr_list:
+            case t_pr_begin:
+            case t_pr_end:
+            case t_pr_if:
+            case t_pr_else:
+            case t_pr_do:
+            case t_pr_until:
+            case t_pr_read:
+            case t_pr_print:
+            case t_pr_add:
+            case t_pr_delete:
+            case t_pr_and:
+            case t_pr_or:
+            case t_pr_not:
+            case t_pr_true:
+            case t_pr_false:
+            case t_pr_count:
+            case t_pr_size:
+            case t_pr_elementOf:
+                return lexeme;
+
+            // Símbolos especiais - MOSTRAM LEXEMA
+            case t_TOKEN_3: // "+"
+            case t_TOKEN_32: // "-"
+            case t_TOKEN_33: // "*"
+            case t_TOKEN_34: // "/"
+            case t_TOKEN_35: // "=="
+            case t_TOKEN_36: // "~="
+            case t_TOKEN_37: // "<"
+            case t_TOKEN_38: // ">"
+            case t_TOKEN_39: // "="
+            case t_TOKEN_40: // "<-"
+            case t_TOKEN_41: // "("
+            case t_TOKEN_42: // ")"
+            case t_TOKEN_43: // ";"
+            case t_TOKEN_44: // ","
+                return lexeme;
+
+            default:
+                return lexeme;
+        }
     }
-}
 
     private boolean isEmContextoDeclaracao() {
         return currentToken != null &&
@@ -348,22 +371,45 @@ public class Sintatico implements Constants {
     }
 
     private String obterSimbolosEsperadosTerminal(int terminal) {
+        // ✅ PRIMEIRO: Verificar se o token atual é EOF
         if (currentToken != null && currentToken.getId() == DOLLAR) {
+            // Quando encontramos EOF inesperadamente, precisamos dizer o que estava
+            // faltando
 
-            if (terminal == 36 && previousToken != null && previousToken.getId() == t_pr_elementOf) {
-                return "expressão";
+            // Caso 1: Programa principal sem 'end'
+            if (stack.contains(0) && (stack.size() <= 3 || !stack.contains(1))) {
+                return "end";
             }
 
-            if (terminal == t_TOKEN_37) {
-                if (stack.contains(46) || stack.contains(58) || stack.contains(53)) {
-                    return "else end";
-                }
-                if (stack.contains(44) || stack.contains(55)) {
+            // Caso 2: Verificações específicas baseadas no terminal esperado
+            switch (terminal) {
+                case 44: // <parte_else>
+                    return "else ou end";
+                case 55: // <comando_selecao>
+                case 56: // <lista_comandos>
                     return "end";
-                }
+                case 53: // <expressao>
+                case 58: // <entrada_dados>
+                    return "expressão";
+                case 70: // <comando_repeticao>
+                    return "end";
+                case 46: // <instrucao>
+                    return "if, print, read ou identificador";
+                default:
+                    // Para terminais de expressão
+                    if (terminal >= 54 && terminal <= 85) {
+                        return "expressão";
+                    }
+                    // Se está em contexto de if
+                    if (stack.contains(44)) {
+                        return "end";
+                    }
+                    // Fallback para a mensagem padrão
+                    return PARSER_ERROR[terminal] != null ? PARSER_ERROR[terminal] : "símbolo";
             }
         }
 
+        // ✅ SEGUNDO: Para tokens normais (não EOF), usar as mensagens padrão
         switch (terminal) {
             case DOLLAR:
                 return "EOF";
@@ -416,41 +462,41 @@ public class Sintatico implements Constants {
             case t_TOKEN_3:
                 return "+";
             case t_TOKEN_32:
-                return "<-";
-            case t_TOKEN_33:
-                return "=";
-            case t_TOKEN_34:
-                return ",";
-            case t_TOKEN_35:
-                return ")";
-            case t_TOKEN_36:
-                return "(";
-            case t_TOKEN_37:
-                return ";";
-            case t_TOKEN_38:
-                return "==";
-            case t_TOKEN_39:
-                return "<";
-            case t_TOKEN_40:
-                return ">";
-            case t_TOKEN_41:
                 return "-";
-            case t_TOKEN_42:
+            case t_TOKEN_33:
                 return "*";
-            case t_TOKEN_43:
+            case t_TOKEN_34:
                 return "/";
+            case t_TOKEN_35:
+                return "==";
+            case t_TOKEN_36:
+                return "~=";
+            case t_TOKEN_37:
+                return "<";
+            case t_TOKEN_38:
+                return ">";
+            case t_TOKEN_39:
+                return "=";
+            case t_TOKEN_40:
+                return "<-";
+            case t_TOKEN_41:
+                return "(";
+            case t_TOKEN_42:
+                return ")";
+            case t_TOKEN_43:
+                return ";";
+            case t_TOKEN_44:
+                return ",";
             default:
-                return PARSER_ERROR[terminal];
+                return PARSER_ERROR[terminal] != null ? PARSER_ERROR[terminal] : "símbolo";
         }
     }
 
     private String getMensagemTipoPorContexto(int terminal) {
-        if (isChamadoPor(45)) {
-            return "tipo";
-        } else if (isChamadoPor(48)) {
-            return getNomeTipoIndividual(terminal);
-        } else if (isChamadoPor(50)) {
+        if (isChamadoPor(48) || isChamadoPor(50)) {
             return "tipo primitivo";
+        } else if (isChamadoPor(6)) {
+            return "tipo";
         } else {
             return getNomeTipoIndividual(terminal);
         }
@@ -479,201 +525,243 @@ public class Sintatico implements Constants {
     }
 
     private String obterSimbolosEsperadosNaoTerminal(int naoTerminal, int tokenAtual) {
+        System.out.println("=== INICIO DO METODO ===");
 
-    if (naoTerminal == 52 && previousToken != null && previousToken.getId() == t_TOKEN_34) {
-        return "identificador";
-    }
-
-    if (naoTerminal == 68 && currentToken != null && currentToken.getId() == t_TOKEN_34) {
-        return "constante_string";
-    }
-
-    if (naoTerminal == 81 && currentToken != null && currentToken.getId() == t_pr_elementOf) {
-        return "expressão";
-    }
-
-    if (currentToken != null && currentToken.getId() == DOLLAR) {
-
-        if (naoTerminal == 55 && previousToken != null && previousToken.getId() == t_TOKEN_37) {
-            return "end"; 
+        // SEÇÃO 1 - EOF
+        System.out.println("=== ANTES DA SEÇÃO 1 (EOF) ===");
+        if (currentToken != null && currentToken.getId() == DOLLAR) {
+            System.out.println("=== ENTROU NA SEÇÃO 1 - RETORNO EOF ===");
+            // ... código EOF
         }
+        System.out.println("=== PASSOU DA SEÇÃO 1 ===");
 
-        if ((naoTerminal == 53 || naoTerminal == 58) &&
-                stack.contains(46)) { 
-            return "else end";
+        // SEÇÃO 2 - Contextual
+        System.out.println("=== ANTES DA SEÇÃO 2 (CONTEXTUAL) ===");
+        if (naoTerminal == 51 && currentToken != null && currentToken.getId() == DOLLAR) {
+            System.out.println("=== RETORNO SEÇÃO 2.1 ===");
+            return ";";
         }
-        
-        switch (naoTerminal) {
-            case 44: 
-                return "else end";
-            case 55: 
-                return "end";
-            case 58:
-                return "expressão";
-            case 53:
-                return "expressão";
-            case 70:
-                return "end";
-            case 46: 
-                return "expressão";
-            default:
-                if (naoTerminal >= 54 && naoTerminal <= 85) {
-                    return "expressão"; 
-                }
+        System.out.println("=== PASSOU DA SEÇÃO 2.1 ===");
 
-                if (stack.contains(44)) { 
-                    return "end";
-                }
-                return PARSER_ERROR[naoTerminal];
-        }
-    }
-
-    if (previousToken != null) {
-        if (previousToken.getId() == t_id && tokenAtual == t_TOKEN_37) {
-            return "= <- add delete";
-        }
-        if (isTipoTerminal(previousToken.getId()) && isTokenConstante(tokenAtual)) {
+        if (naoTerminal == 52 && previousToken != null && previousToken.getId() == t_TOKEN_34) {
+            System.out.println("=== RETORNO SEÇÃO 2.2 ===");
             return "identificador";
         }
+        System.out.println("=== PASSOU DA SEÇÃO 2.2 ===");
 
-        if (isTipoTerminal(previousToken.getId()) && naoTerminal == 51) {
-            return "identificador";
-        }
-    }
-
-    if (tokenAtual == t_TOKEN_36) {
-        return "list";
-    }
-
-    if (naoTerminal == 81 && currentToken != null &&
-            currentToken.getId() == t_pr_elementOf) {
-        return "expressão"; 
-    }
-
-    if ((naoTerminal == 59 || naoTerminal == 65) &&
-            currentToken != null && isTokenConstante(currentToken.getId())) {
-        if (currentToken.getId() != t_Const_string) {
+        if (naoTerminal == 68 && currentToken != null && currentToken.getId() == t_TOKEN_34) {
+            System.out.println("=== RETORNO SEÇÃO 2.3 ===");
             return "constante_string";
         }
-    }
+        System.out.println("=== PASSOU DA SEÇÃO 2.3 ===");
 
-    if (naoTerminal == 1 && isTipoIndividualEsperado(tokenAtual)) {
-        return getNomeTipoIndividual(tokenAtual);
-    }
+        if (naoTerminal == 81 && currentToken != null && currentToken.getId() == t_pr_elementOf) {
+            System.out.println("=== RETORNO SEÇÃO 2.4 ===");
+            return "expressao";
+        }
+        System.out.println("=== PASSOU DA SEÇÃO 2 TODA ===");
 
-    if (previousToken != null && previousToken.getId() == t_id && tokenAtual == t_TOKEN_37) {
-        return "= <- add delete";
-    }
+        // SEÇÃO 3 - Tokens anteriores
+        System.out.println("=== ANTES DA SEÇÃO 3 (TOKENS ANTERIORES) ===");
+        if (previousToken != null) {
+            System.out.println("=== previousToken NÃO É NULL ===");
+            if (previousToken.getId() == t_id && tokenAtual == t_TOKEN_37) {
+                System.out.println("=== RETORNO SEÇÃO 3.1 ===");
+                return "= <- add delete";
+            }
+            System.out.println("=== PASSOU SEÇÃO 3.1 ===");
 
-    // CORREÇÕES CONFORME ESPECIFICAÇÃO
-    switch (naoTerminal) {
-        case 0:  // <dec_program> / <programa>
-            return "begin";
-        case 1:  // <lista_instrucoes>
-            return "identificador do if print read tipo";
-        case 6:  // <tipo>
-            return "tipo";
-        case 7:  // <tipo> ou <dec_var>
-            return "tipo";
-        case 11: // <Lista>
+            if (isTipoTerminal(previousToken.getId()) && isTokenConstante(tokenAtual)) {
+                System.out.println("=== RETORNO SEÇÃO 3.2 ===");
+                // Usar o previousToken para saber qual tipo estava sendo declarado
+                switch (previousToken.getId()) {
+                    case t_pr_tipoInt:
+                        return "int";
+                    case t_pr_tipoFloat:
+                        return "float";
+                    case t_pr_tipoString:
+                        return "string";
+                    case t_pr_tipoBoolean:
+                        return "bool";
+                    case t_pr_list:
+                        return "list";
+                    default:
+                        return "identificador";
+                }
+            }
+            System.out.println("=== PASSOU SEÇÃO 3.2 ===");
+
+            if (isTipoTerminal(previousToken.getId()) && naoTerminal == 51) {
+                System.out.println("=== RETORNO SEÇÃO 3.3 ===");
+                return "identificador";
+            }
+            System.out.println("=== PASSOU SEÇÃO 3.3 ===");
+        } else {
+            System.out.println("=== previousToken É NULL ===");
+        }
+        System.out.println("=== PASSOU DA SEÇÃO 3 TODA ===");
+
+        // VERIFICAÇÕES INDIVIDUAIS
+        System.out.println("=== ANTES DAS VERIFICAÇÕES INDIVIDUAIS ===");
+        if (tokenAtual == t_TOKEN_36) {
+            System.out.println("=== RETORNO INDIVIDUAL 1 ===");
             return "list";
-        case 12: // produção da lista
-            return "(";
-        case 18: // <lista_identificadores> / <lista_id>
-            return "identificador";
-        case 22: // <comando_id> / <atribuicao_manipulacao_listas>
-            return "= <- add delete";
-        case 27: // <comando_id> / <atribuicao_manipulacao_listas>
-            return "= <- add delete";
-        case 35: // <entrada_dados>
-            return "read";
-        case 42: // <saida_dados>
-            return "print";
-        case 43: // <expressao>
-            return "expressão";
-        case 46: // <comando_selecao>
-            return "if";
-        case 52: // <comando_repeticao>
-            return "do";
-        case 53: // <expressao> em until
-            return "expressão";
-        case 60: // <expressao> em contexto de comando
-            return "expressão";
-            
-        // ADICIONANDO OUTROS NÃO-TERMINAIS IMPORTANTES
-        case 44: // <parte_else>
-            return "else end";
-        case 45: // <instrucao>
-            return "identificador do if print read tipo";
-        case 48: // <tipoSimples>
-            return "tipo primitivo";
-        case 50: // <tipoSimples> em outro contexto
-            return "tipo primitivo";
-        case 51: // <lista_identificadores>
-            return "identificador";
-        case 54: // <valor>
-            return "expressão";
-        case 55: // <expressao_>
-            return "expressão";
-        case 56: // <relacional>
-            return "expressão";
-        case 57: // <relacional_>
-            return "expressão";
-        case 58: // <aritmetica>
-            return "expressão";
-        case 59: // <aritmetica_>
-            return "expressão";
-        case 61: // <termo>
-            return "expressão";
-        case 62: // <termo_>
-            return "expressão";
-        case 63: // <fator>
-            return "expressão";
-        case 64: // <fator_>
-            return "expressão";
-        case 65: // <elemento>
-            return "expressão";
-        case 66: // <posicao>
-            return "expressão";
+        }
+        System.out.println("=== PASSOU INDIVIDUAL 1 ===");
+
+        if ((naoTerminal == 59 || naoTerminal == 65) && currentToken != null
+                && isTokenConstante(currentToken.getId())) {
+            if (currentToken.getId() != t_Const_string) {
+                System.out.println("=== RETORNO INDIVIDUAL 2 ===");
+                return "constante_string";
+            }
+        }
+        System.out.println("=== PASSOU INDIVIDUAL 2 ===");
+
+        if (naoTerminal == 1 && isTipoIndividualEsperado(tokenAtual)) {
+            System.out.println("=== RETORNO INDIVIDUAL 3 ===");
+            return getNomeTipoIndividual(tokenAtual);
+        }
+        System.out.println("=== PASSOU INDIVIDUAL 3 ===");
+
+        System.out.println("=== CHEGOU NO SWITCH! ===");
+
+        // SWITCH PRINCIPAL
+        switch (naoTerminal) {
+            case 0:
+                return "begin";
+            case 1:
+                return "identificador do if ou print ou read ou tipo";
+            case 6:
+                return "tipo";
+            case 7:
+                return "tipo";
+            case 11:
+                return "list";
+            case 12:
+                return "(";
+            case 18:
+                return "identificador";
+            case 22:
+                return "= <- add delete";
+            case 27:
+                return "= <- add delete";
+            case 35:
+                return "read";
+            case 42:
+                return "print";
+            case 43:
+                return "expressao";
+            case 46:
+                if (tokenAtual == t_Const_int || tokenAtual == t_Const_float ||
+                        tokenAtual == t_Const_string || tokenAtual == t_pr_true ||
+                        tokenAtual == t_pr_false || tokenAtual == t_pr_list) {
+                    return "tipo";
+                }
+                return "identificador do if ou print ou read ou tipo";
+            case 52:
+                return "do";
+            case 53: // <lista_identificadores>
+                System.out.println("=== ENTROU NO CASO 53 ===");
+                // Usar previousToken para detectar qual tipo estava sendo declarado
+                System.out.println("Previous token ID: " + previousToken.getId());
+                switch (previousToken.getId()) {
+                    case t_pr_tipoInt:
+                        System.out.println("Retornando: int");
+                        return "int";
+                    case t_pr_tipoFloat:
+                        System.out.println("Retornando: float");
+                        return "float";
+                    case t_pr_tipoString:
+                        System.out.println("Retornando: string");
+                        return "string";
+                    case t_pr_tipoBoolean:
+                        System.out.println("Retornando: bool");
+                        return "bool";
+                    case t_pr_list:
+                        System.out.println("Retornando: list");
+                        return "list";
+                }
+                System.out.println("Retornando: identificador");
+                return "identificador";
+            case 60:
+                return "expressao";
+            case 44:
+                return "else end";
+            case 45: // <instrucao>
+                // Se encontrou um número/string/operador, era esperado um tipo para declaração
+                if (tokenAtual == t_Const_int || tokenAtual == t_Const_float ||
+                        tokenAtual == t_Const_string || tokenAtual == t_pr_true ||
+                        tokenAtual == t_pr_false) {
+                    return "tipo";
+                }
+                // Mantém a mensagem original para outros casos
+                return "identificador do if ou print ou read ou tipo";
+            case 48:
+                return "tipo primitivo";
+            case 50:
+                return "tipo primitivo";
+            case 51:
+                return "tipo primitivo";
+            case 54:
+            case 55:
+            case 56:
+            case 57:
+            case 58:
+            case 59:
+            case 61:
+                // Se é a primeira instrução onde todos os 5 tipos são esperados
+                if (isChamadoPor(45) && isChamadoPor(1)) { // <instrucao> chamado por <lista_instrucoes>
+                    return "tipo"; // ← APENAS "tipo" conforme especificação
+                } else {
+                    return "tipo";
+                }
+            case 62:
+            case 63:
+            case 64:
+            case 65:
+            case 66:
+                return "expressao";
+        }
+
+        // 5. QUINTO: Fallback para não-terminais de expressão
+        if (naoTerminal >= 54 && naoTerminal <= 85) {
+            return "expressao";
+        }
+
+        return PARSER_ERROR[naoTerminal] != null ? PARSER_ERROR[naoTerminal] : "símbolo";
     }
-
-    // Para não-terminais de expressão (54-85)
-    if (naoTerminal >= 54 && naoTerminal <= 85)
-        return "expressão";
-
-    return PARSER_ERROR[naoTerminal] != null ? PARSER_ERROR[naoTerminal] : "símbolo";
-}
 
     private boolean pushProduction(int topStack, int tokenInput) {
-    // Ajuste para lidar com casos onde tokenInput pode ser 0 ou negativo
-    if (tokenInput <= 0) {
-        return false;
-    }
-    
-    try {
-        int p = PARSER_TABLE[topStack - FIRST_NON_TERMINAL][tokenInput - 1];
-        if (p >= 0) {
-            int[] production = PRODUCTIONS[p];
-            // Adicione tratamento para produção vazia
-            if (production.length == 1 && production[0] == EPSILON) {
+        // Ajuste para lidar com casos onde tokenInput pode ser 0 ou negativo
+        if (tokenInput <= 0) {
+            return false;
+        }
+
+        try {
+            int p = PARSER_TABLE[topStack - FIRST_NON_TERMINAL][tokenInput - 1];
+            if (p >= 0) {
+                int[] production = PRODUCTIONS[p];
+                // Adicione tratamento para produção vazia
+                if (production.length == 1 && production[0] == EPSILON) {
+                    return true;
+                }
+                for (int i = production.length - 1; i >= 0; i--) {
+                    stack.push(new Integer(production[i]));
+                }
                 return true;
             }
-            for (int i = production.length - 1; i >= 0; i--) {
-                stack.push(new Integer(production[i]));
-            }
-            return true;
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // Log para debug
+            System.out.println("Erro na tabela: topStack=" + topStack + ", tokenInput=" + tokenInput);
         }
-    } catch (ArrayIndexOutOfBoundsException e) {
-        // Log para debug
-        System.out.println("Erro na tabela: topStack=" + topStack + ", tokenInput=" + tokenInput);
+        return false;
     }
-    return false;
-}
 
     private boolean isEmContextoDeclaracaoCorrigido() {
-    return stack.contains(45) || stack.contains(46) || 
-           (previousToken != null && isTipoTerminal(previousToken.getId()));
-}
+        return stack.contains(45) || stack.contains(46) ||
+                (previousToken != null && isTipoTerminal(previousToken.getId()));
+    }
 
     public void parse(Lexico scanner, Semantico semanticAnalyser) throws LexicalError, SyntaticError, SemanticError {
         this.scanner = scanner;

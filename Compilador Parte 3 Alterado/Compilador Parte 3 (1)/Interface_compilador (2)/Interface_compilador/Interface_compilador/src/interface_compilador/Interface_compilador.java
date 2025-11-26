@@ -447,348 +447,412 @@ public class Interface_compilador {
                 }
 
                 btnCompilar.addActionListener(new ActionListener() {
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        mensagem.setText(""); // limpa a área de mensagens
-        String programaFonte = editorPrograma.getText();
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                                mensagem.setText(""); // limpa a área de mensagens
+                                String programaFonte = editorPrograma.getText();
 
-        if (programaFonte.trim().isEmpty()) {
-            mensagem.setText("O programa está vazio.");
-            return;
-        }
+                                if (programaFonte.trim().isEmpty()) {
+                                        mensagem.setText("O programa está vazio.");
+                                        return;
+                                }
 
-        // Verificação de comentários não finalizados
-        boolean comentarioNaoFinalizado = false;
-        int linhaComentarioInicio = 1;
-        String[] linhas = programaFonte.split("\n");
+                                // Verificação de comentários não finalizados
+                                boolean comentarioNaoFinalizado = false;
+                                int linhaComentarioInicio = 1;
+                                String[] linhas = programaFonte.split("\n");
 
-        for (int i = 0; i < linhas.length; i++) {
-            String linha = linhas[i];
-            int numeroLinha = i + 1;
+                                for (int i = 0; i < linhas.length; i++) {
+                                        String linha = linhas[i];
+                                        int numeroLinha = i + 1;
 
-            if (comentarioNaoFinalizado) {
-                if (linha.contains("*)")) {
-                    comentarioNaoFinalizado = false;
-                } else if (i == linhas.length - 1) {
-                    mensagem.setText(String.format("Linha %d: comentário inválido ou não finalizado", linhaComentarioInicio));
-                    return;
-                }
-            } else {
-                if (linha.contains("(*")) {
-                    if (!linha.contains("*)")) {
-                        comentarioNaoFinalizado = true;
-                        linhaComentarioInicio = numeroLinha;
-                    }
-                }
-            }
-        }
+                                        if (comentarioNaoFinalizado) {
+                                                if (linha.contains("*)")) {
+                                                        comentarioNaoFinalizado = false;
+                                                } else if (i == linhas.length - 1) {
+                                                        mensagem.setText(String.format(
+                                                                        "Linha %d: comentário inválido ou não finalizado",
+                                                                        linhaComentarioInicio));
+                                                        return;
+                                                }
+                                        } else {
+                                                if (linha.contains("(*")) {
+                                                        if (!linha.contains("*)")) {
+                                                                comentarioNaoFinalizado = true;
+                                                                linhaComentarioInicio = numeroLinha;
+                                                        }
+                                                }
+                                        }
+                                }
 
-        if (comentarioNaoFinalizado) {
-            mensagem.setText(String.format("Linha %d: comentário inválido ou não finalizado", linhaComentarioInicio));
-            return;
-        }
+                                if (comentarioNaoFinalizado) {
+                                        mensagem.setText(
+                                                        String.format("Linha %d: comentário inválido ou não finalizado",
+                                                                        linhaComentarioInicio));
+                                        return;
+                                }
 
-        StringBuilder resultadoFinal = new StringBuilder();
-        boolean erroEncontrado = false;
+                                StringBuilder resultadoFinal = new StringBuilder();
+                                boolean erroEncontrado = false;
+                                boolean programaCompiladoComSucesso = true;
 
-        // PRIMEIRO: Análise Léxica
-        try {
-            Lexico lexicoParaAnalise = new Lexico();
-            lexicoParaAnalise.setInput(new StringReader(programaFonte));
+                                // PRIMEIRO: Análise Léxica
+                                try {
+                                        Lexico lexicoParaAnalise = new Lexico();
+                                        lexicoParaAnalise.setInput(new StringReader(programaFonte));
 
-            String[] palavrasReservadas = {
-                "add", "and", "begin", "bool", "count", "delete", "do", "elementOf",
-                "else", "end", "false", "float", "if", "int", "list", "not", "or",
-                "print", "read", "size", "string", "true", "until"
-            };
+                                        String[] palavrasReservadas = {
+                                                        "add", "and", "begin", "bool", "count", "delete", "do",
+                                                        "elementOf",
+                                                        "else", "end", "false", "float", "if", "int", "list", "not",
+                                                        "or",
+                                                        "print", "read", "size", "string", "true", "until"
+                                        };
 
-            Token token;
+                                        Token token;
 
-            while ((token = lexicoParaAnalise.nextToken()) != null) {
-    int linha = calcularLinha(token.getPosition(), programaFonte);
+                                        while ((token = lexicoParaAnalise.nextToken()) != null) {
+                                                int linha = calcularLinha(token.getPosition(), programaFonte);
 
-    // Ignora comentários
-    if (token.getId() == Constants.t_Comentario_linha || token.getId() == Constants.t_Comentario_bloco) {
-        if (token.getId() == Constants.t_Comentario_bloco && !token.getLexeme().endsWith("*)")) {
-            resultadoFinal.append(String.format("Linha %d: comentário inválido ou não finalizado\n", linha));
-            erroEncontrado = true;
-        }
-        continue;
-    }
+                                                // Ignora comentários
+                                                if (token.getId() == Constants.t_Comentario_linha
+                                                                || token.getId() == Constants.t_Comentario_bloco) {
+                                                        if (token.getId() == Constants.t_Comentario_bloco
+                                                                        && !token.getLexeme().endsWith("*)")) {
+                                                                resultadoFinal.append(String.format(
+                                                                                "Linha %d: comentário inválido ou não finalizado\n",
+                                                                                linha));
+                                                                erroEncontrado = true;
+                                                        }
+                                                        continue;
+                                                }
 
-    // Verifica apenas por erros léxicos (tokens desconhecidos)
-    String classe = obterClasseToken(token.getId(), token.getLexeme(), palavrasReservadas);
-    if ("desconhecido".equals(classe)) {
-        resultadoFinal.append(String.format("Linha %d: %s símbolo inválido\n", linha, token.getLexeme()));
-        erroEncontrado = true;
-    } else if ("ignorar".equals(classe)) {
-        // Ignora tokens que são apenas espaços/quebras
-        continue;
-    }
-}
+                                                if (token.getId() == Constants.t_Const_string) {
+                                                        String lexema = token.getLexeme();
+                                                        if (!lexema.endsWith("\"") || lexema.contains("\n")) {
+                                                                resultadoFinal.append(String.format(
+                                                                                "Linha %d: constante_string inválida\n",
+                                                                                linha, lexema));
+                                                                erroEncontrado = true;
+                                                                programaCompiladoComSucesso = false;
+                                                                continue;
+                                                        }
+                                                }
 
-        } catch (LexicalError erroLexico) {
-            int linha = calcularLinha(erroLexico.getPosition(), programaFonte);
-            resultadoFinal.append(montarMensagemErroLexico(erroLexico, linha, programaFonte));
-            erroEncontrado = true;
-        } catch (Exception ex) {
-            resultadoFinal.append("Erro inesperado na análise léxica: ").append(ex.getMessage()).append("\n");
-            erroEncontrado = true;
-        }
+                                                // Verifica por erros léxicos (tokens desconhecidos)
+                                                String classe = obterClasseToken(token.getId(), token.getLexeme(),
+                                                                palavrasReservadas);
 
-        // SEGUNDO: Análise Sintática (apenas se não houve erro léxico)
-        if (!erroEncontrado) {
-            try {
-                Lexico lexicoParaSintatico = new Lexico();
-                Sintatico sintatico = new Sintatico();
-                Semantico semantico = new Semantico();
+                                                if ("desconhecido".equals(classe)) {
+                                                        resultadoFinal.append(
+                                                                        String.format("Linha %d: %s símbolo inválido\n",
+                                                                                        linha, token.getLexeme()));
+                                                        erroEncontrado = true;
+                                                }
+                                                // NÃO ADICIONA TOKENS RECONHECIDOS À LISTA - apenas verifica erros
+                                        }
 
-                lexicoParaSintatico.setInput(new StringReader(programaFonte));
-                sintatico.parse(lexicoParaSintatico, semantico);
+                                } catch (LexicalError erroLexico) {
+                                        int linha = calcularLinha(erroLexico.getPosition(), programaFonte);
+                                        resultadoFinal.append(
+                                                        montarMensagemErroLexico(erroLexico, linha, programaFonte));
+                                        erroEncontrado = true;
+                                } catch (Exception ex) {
+                                        resultadoFinal.append("Erro inesperado na análise léxica: ")
+                                                        .append(ex.getMessage()).append("\n");
+                                        erroEncontrado = true;
+                                }
 
-                // Se chegou aqui sem exceção, compilação foi bem-sucedida
-                mensagem.setText("Programa compilado com sucesso!");
-                return;
+                                // SEGUNDO: Análise Sintática (apenas se não houve erro léxico)
+                                if (!erroEncontrado) {
+                                        try {
+                                                Lexico lexicoParaSintatico = new Lexico();
+                                                Sintatico sintatico = new Sintatico();
+                                                Semantico semantico = new Semantico();
 
-            } catch (SyntaticError errosintatico) {
-                int linha = calcularLinha(errosintatico.getPosition(), programaFonte);
-                resultadoFinal.append("Linha ").append(linha).append(": ").append(errosintatico.getMessage()).append("\n");
-                erroEncontrado = true;
-            } catch (SemanticError erroSemantico) {
-                int linha = calcularLinha(erroSemantico.getPosition(), programaFonte);
-                resultadoFinal.append("Linha ").append(linha).append(": ").append(erroSemantico.getMessage()).append("\n");
-                erroEncontrado = true;
-            } catch (Exception ex) {
-                resultadoFinal.append("Erro inesperado na análise sintática: ").append(ex.getMessage()).append("\n");
-                erroEncontrado = true;
-            }
-        }
+                                                lexicoParaSintatico.setInput(new StringReader(programaFonte));
+                                                sintatico.parse(lexicoParaSintatico, semantico);
 
-        // Se houve erro em qualquer fase
-        if (erroEncontrado) {
-            mensagem.setText(resultadoFinal.toString());
-        }
+                                                // Se chegou aqui sem exceção, compilação foi bem-sucedida
+                                                mensagem.setText("programa compilado com sucesso");
+                                                return;
 
-        
-            
-    }
+                                        } catch (SyntaticError errosintatico) {
+                                                int linha = calcularLinha(errosintatico.getPosition(), programaFonte);
+                                                resultadoFinal.append("Linha ").append(linha).append(": ")
+                                                                .append(errosintatico.getMessage()).append("\n");
+                                                erroEncontrado = true;
+                                        } catch (SemanticError erroSemantico) {
+                                                int linha = calcularLinha(erroSemantico.getPosition(), programaFonte);
+                                                resultadoFinal.append("Linha ").append(linha).append(": ")
+                                                                .append(erroSemantico.getMessage()).append("\n");
+                                                erroEncontrado = true;
+                                        } catch (Exception ex) {
+                                                resultadoFinal.append("Erro inesperado na análise sintática: ")
+                                                                .append(ex.getMessage()).append("\n");
+                                                erroEncontrado = true;
+                                        }
+                                }
 
-    // Métodos auxiliares (mantenha os que você já tem)
-    private int calcularLinha(int posicao, String texto) {
-        if (posicao < 0 || texto == null || texto.isEmpty()) {
-            return 1;
-        }
-        int linha = 1;
-        for (int i = 0; i < posicao && i < texto.length(); i++) {
-            if (texto.charAt(i) == '\n') {
-                linha++;
-            }
-        }
-        return linha;
-    }
+                                // Se houve erro em qualquer fase
+                                if (erroEncontrado) {
+                                        mensagem.setText(resultadoFinal.toString());
+                                }
+                        }
 
-    private String obterClasseToken(int idClasse, String lexema, String[] palavrasReservadas) {
-        // SUA IMPLEMENTAÇÃO ATUAL - mantenha igual
-            if (lexema.trim().isEmpty()) {
-        return "ignorar";
-    }
+                        // Métodos auxiliares (mantenha os que você já tem)
+                        private int calcularLinha(int posicao, String texto) {
+                                if (posicao < 0 || texto == null || texto.isEmpty()) {
+                                        return 1;
+                                }
+                                int linha = 1;
+                                for (int i = 0; i < posicao && i < texto.length(); i++) {
+                                        if (texto.charAt(i) == '\n') {
+                                                linha++;
+                                        }
+                                }
+                                return linha;
+                        }
 
-        // PRIMEIRO: Verifica se é símbolo especial por LEXEMA
-        String[] simbolosEspeciais = {"+", "-", "*", "/", "==", "~=", "<", ">", "=", "<-", "(", ")", ";", ","};
+                        private String obterClasseToken(int idClasse, String lexema, String[] palavrasReservadas) {
+                                if (lexema.trim().isEmpty()) {
+                                        return "ignorar";
+                                }
 
-        for (String simbolo : simbolosEspeciais) {
-            if (simbolo.equals(lexema)) {
-                return "símbolo especial";
-            }
-        }
+                                // PRIMEIRO: Verifica se é símbolo especial por LEXEMA
+                                String[] simbolosEspeciais = { "+", "-", "*", "/", "==", "~=", "<", ">", "=", "<-", "(",
+                                                ")", ";", "," };
 
-        // SEGUNDO: Lógica normal por ID
-        switch (idClasse) {
-            case Constants.t_id:
-                for (String palavra : palavrasReservadas) {
-                    if (palavra.equals(lexema)) {
-                        return "palavra reservada";
-                    }
-                }
-                if (lexema.matches("[a-zA-Z][a-zA-Z0-9_]*") && !lexema.endsWith("_")) {
-                    return "identificador";
-                }
-                return "desconhecido";
+                                for (String simbolo : simbolosEspeciais) {
+                                        if (simbolo.equals(lexema)) {
+                                                return "símbolo especial";
+                                        }
+                                }
 
-            case Constants.t_Const_int:
-                if (lexema.matches("\\d{1,5}")) {
-                    if (lexema.length() > 1 && lexema.startsWith("0")) {
-                        return "desconhecido";
-                    }
-                    return "constante_int";
-                }
-                return "desconhecido";
+                                // SEGUNDO: Lógica normal por ID
+                                switch (idClasse) {
+                                        case Constants.t_id:
+                                                for (String palavra : palavrasReservadas) {
+                                                        if (palavra.equals(lexema)) {
+                                                                return "palavra reservada";
+                                                        }
+                                                }
+                                                if (lexema.matches("[a-zA-Z][a-zA-Z0-9_]*") && !lexema.endsWith("_")) {
+                                                        return "identificador";
+                                                }
+                                                return "desconhecido";
 
-            case Constants.t_Const_float:
-                if (lexema.matches("\\d{1,5}\\.\\d{1,5}")) {
-                    String[] partes = lexema.split("\\.");
-                    String parteInteira = partes[0];
-                    if (parteInteira.length() > 1 && parteInteira.startsWith("0")) {
-                        return "desconhecido";
-                    }
-                    return "constante_float";
-                }
-                return "desconhecido";
+                                        case Constants.t_Const_int:
+                                                if (lexema.matches("\\d{1,5}")) {
+                                                        if (lexema.length() > 1 && lexema.startsWith("0")) {
+                                                                return "desconhecido";
+                                                        }
+                                                        return "constante_int";
+                                                }
+                                                return "desconhecido";
 
-            case Constants.t_Const_string:
-                if (lexema.startsWith("\"") && lexema.endsWith("\"") && !lexema.contains("\n")) {
-                    return "constante_string";
-                }
-                return "desconhecido";
+                                        case Constants.t_Const_float:
+                                                if (lexema.matches("\\d{1,5}\\.\\d{1,5}")) {
+                                                        String[] partes = lexema.split("\\.");
+                                                        String parteInteira = partes[0];
+                                                        if (parteInteira.length() > 1 && parteInteira.startsWith("0")) {
+                                                                return "desconhecido";
+                                                        }
+                                                        return "constante_float";
+                                                }
+                                                return "desconhecido";
 
-            case Constants.t_Comentario_linha:
-            case Constants.t_Comentario_bloco:
-                return "comentario_valido";
+                                        case Constants.t_Const_string:
+                                                if (lexema.startsWith("\"") && lexema.endsWith("\"")
+                                                                && !lexema.contains("\n")) {
+                                                        return "constante_string";
+                                                }
+                                                // Se chegou aqui, é string não fechada
+                                                return "desconhecido";
 
-            case Constants.t_pr_tipoInt:
-            case Constants.t_pr_tipoFloat:
-            case Constants.t_pr_tipoString:
-            case Constants.t_pr_tipoBoolean:
-            case Constants.t_pr_list:
-            case Constants.t_pr_add:
-            case Constants.t_pr_delete:
-            case Constants.t_pr_read:
-            case Constants.t_pr_print:
-            case Constants.t_pr_if:
-            case Constants.t_pr_else:
-            case Constants.t_pr_end:
-            case Constants.t_pr_do:
-            case Constants.t_pr_until:
-            case Constants.t_pr_begin:
-            case Constants.t_pr_and:
-            case Constants.t_pr_or:
-            case Constants.t_pr_not:
-            case Constants.t_pr_count:
-            case Constants.t_pr_size:
-            case Constants.t_pr_elementOf:
-            case Constants.t_pr_true:
-            case Constants.t_pr_false:
-                return "palavra reservada";
+                                        case Constants.t_Comentario_linha:
+                                        case Constants.t_Comentario_bloco:
+                                                return "comentario_valido";
 
-            case Constants.t_TOKEN_3:
-            case Constants.t_TOKEN_32:
-            case Constants.t_TOKEN_33:
-            case Constants.t_TOKEN_34:
-            case Constants.t_TOKEN_35:
-            case Constants.t_TOKEN_36:
-            case Constants.t_TOKEN_37:
-            case Constants.t_TOKEN_38:
-            case Constants.t_TOKEN_39:
-            case Constants.t_TOKEN_40:
-            case Constants.t_TOKEN_41:
-            case Constants.t_TOKEN_42:
-            case Constants.t_TOKEN_43:
-            case Constants.t_TOKEN_44:
-                return "símbolo especial";
+                                        case Constants.t_pr_tipoInt:
+                                        case Constants.t_pr_tipoFloat:
+                                        case Constants.t_pr_tipoString:
+                                        case Constants.t_pr_tipoBoolean:
+                                        case Constants.t_pr_list:
+                                        case Constants.t_pr_add:
+                                        case Constants.t_pr_delete:
+                                        case Constants.t_pr_read:
+                                        case Constants.t_pr_print:
+                                        case Constants.t_pr_if:
+                                        case Constants.t_pr_else:
+                                        case Constants.t_pr_end:
+                                        case Constants.t_pr_do:
+                                        case Constants.t_pr_until:
+                                        case Constants.t_pr_begin:
+                                        case Constants.t_pr_and:
+                                        case Constants.t_pr_or:
+                                        case Constants.t_pr_not:
+                                        case Constants.t_pr_count:
+                                        case Constants.t_pr_size:
+                                        case Constants.t_pr_elementOf:
+                                        case Constants.t_pr_true:
+                                        case Constants.t_pr_false:
+                                                return "palavra reservada";
 
-            default:
-                return "desconhecido";
-        }
-    }
+                                        case Constants.t_TOKEN_3:
+                                        case Constants.t_TOKEN_32:
+                                        case Constants.t_TOKEN_33:
+                                        case Constants.t_TOKEN_34:
+                                        case Constants.t_TOKEN_35:
+                                        case Constants.t_TOKEN_36:
+                                        case Constants.t_TOKEN_37:
+                                        case Constants.t_TOKEN_38:
+                                        case Constants.t_TOKEN_39:
+                                        case Constants.t_TOKEN_40:
+                                        case Constants.t_TOKEN_41:
+                                        case Constants.t_TOKEN_42:
+                                        case Constants.t_TOKEN_43:
+                                        case Constants.t_TOKEN_44:
+                                                return "símbolo especial";
 
-    private String montarMensagemErroLexico(LexicalError erro, int linha, String texto) {
-        int pos = Math.min(erro.getPosition(), texto.length() - 1);
-        char simbolo = pos >= 0 && pos < texto.length() ? texto.charAt(pos) : ' ';
+                                        default:
+                                                return "desconhecido";
+                                }
+                        }
 
-        if (simbolo == '\\') {
-            return String.format("Linha %d: \\ constante_string inválida\n", linha);
-        }
+                        private String montarMensagemErroLexico(LexicalError erro, int linha, String texto) {
+                                int pos = Math.min(erro.getPosition(), texto.length() - 1);
+                                char simbolo = pos >= 0 && pos < texto.length() ? texto.charAt(pos) : ' ';
 
-        // Detecta e quebrar números longos
-        if (Character.isDigit(simbolo)) {
-            String resultadoNumeros = processarNumerosLongos(pos, linha, texto);
-            if (resultadoNumeros != null) {
-                return resultadoNumeros;
-            }
-        }
+                                // Verifica se é erro de string não fechada
+                                if (simbolo == '"') {
+                                        // Procura pela próxima quebra de linha após a aspas não fechada
+                                        int i = pos + 1;
+                                        while (i < texto.length() && texto.charAt(i) != '\n'
+                                                        && texto.charAt(i) != '"') {
+                                                i++;
+                                        }
 
-        // Capturar identificadores inválidos
-        if (Character.isLetter(simbolo)) {
-            StringBuilder identificador = new StringBuilder();
-            int i = pos;
-            while (i < texto.length() && (Character.isLetterOrDigit(texto.charAt(i)) || texto.charAt(i) == '_')) {
-                identificador.append(texto.charAt(i));
-                i++;
-            }
-            String idStr = identificador.toString();
-            if (idStr.length() > 0 && (idStr.matches(".*[0-9].*") || idStr.endsWith("_"))) {
-                return String.format("Linha %d: %s identificador inválido\n", linha, idStr);
-            }
-        }
+                                        // Se chegou no final do arquivo ou na quebra de linha sem encontrar aspas de
+                                        // fechamento
+                                        if (i >= texto.length() || texto.charAt(i) == '\n') {
+                                                // Extrai o conteúdo da string a partir da posição inicial
+                                                StringBuilder stringContent = new StringBuilder();
+                                                int startPos = pos;
+                                                int currentPos = pos + 1;
 
-        // Verifica caracteres especiais inválidos
-        if (!Character.isLetterOrDigit(simbolo) && !Character.isWhitespace(simbolo)) {
-            String simbolosValidos = "+-*/=~<>();,\"()";
-            if (simbolosValidos.indexOf(simbolo) == -1) {
-                return String.format("Linha %d: %c símbolo inválido\n", linha, simbolo);
-            }
-        }
+                                                while (currentPos < texto.length()
+                                                                && texto.charAt(currentPos) != '\n') {
+                                                        stringContent.append(texto.charAt(currentPos));
+                                                        currentPos++;
+                                                }
 
-        return String.format("Linha %d: %c símbolo inválido\n", linha, simbolo);
-    }
+                                                String conteudoString = stringContent.toString().trim();
+                                                return String.format("Linha %d: constante_string inválida\n",
+                                                                linha, conteudoString);
+                                        }
+                                }
 
-    private String processarNumerosLongos(int pos, int linha, String texto) {
-        StringBuilder numero = new StringBuilder();
-        int i = pos;
-        boolean temPonto = false;
+                                if (simbolo == '\\') {
+                                        return String.format("Linha %d: constante_string inválida\n", linha);
+                                }
 
-        while (i < texto.length() && (Character.isDigit(texto.charAt(i)) || (!temPonto && texto.charAt(i) == '.'))) {
-            if (texto.charAt(i) == '.') {
-                temPonto = true;
-            }
-            numero.append(texto.charAt(i));
-            i++;
-        }
+                                // Detecta e quebrar números longos
+                                if (Character.isDigit(simbolo)) {
+                                        String resultadoNumeros = processarNumerosLongos(pos, linha, texto);
+                                        if (resultadoNumeros != null) {
+                                                return resultadoNumeros;
+                                        }
+                                }
 
-        String numStr = numero.toString();
-        StringBuilder resultado = new StringBuilder();
+                                // Capturar identificadores inválidos
+                                if (Character.isLetter(simbolo)) {
+                                        StringBuilder identificador = new StringBuilder();
+                                        int i = pos;
+                                        while (i < texto.length() && (Character.isLetterOrDigit(texto.charAt(i))
+                                                        || texto.charAt(i) == '_')) {
+                                                identificador.append(texto.charAt(i));
+                                                i++;
+                                        }
+                                        String idStr = identificador.toString();
+                                        if (idStr.length() > 0 && (idStr.matches(".*[0-9].*") || idStr.endsWith("_"))) {
+                                                return String.format("Linha %d: %s identificador inválido\n", linha,
+                                                                idStr);
+                                        }
+                                }
 
-        if (numStr.contains(".")) {
-            String[] partes = numStr.split("\\.");
-            String parteInteira = partes[0];
-            String parteDecimal = partes.length > 1 ? partes[1] : "";
+                                // Verifica caracteres especiais inválidos
+                                if (!Character.isLetterOrDigit(simbolo) && !Character.isWhitespace(simbolo)) {
+                                        String simbolosValidos = "+-*/=~<>();,\"()";
+                                        if (simbolosValidos.indexOf(simbolo) == -1) {
+                                                return String.format("Linha %d: %c símbolo inválido\n", linha, simbolo);
+                                        }
+                                }
 
-            while (parteInteira.length() > 5) {
-                resultado.append("Linha ").append(linha).append(": ")
-                        .append(parteInteira.substring(0, 5)).append(" constante_int\n");
-                parteInteira = parteInteira.substring(5);
-            }
+                                return String.format("Linha %d: %c símbolo inválido\n", linha, simbolo);
+                        }
 
-            if (parteDecimal.length() > 5) {
-                resultado.append("Linha ").append(linha).append(": ")
-                        .append(parteInteira).append(".").append(parteDecimal.substring(0, 5))
-                        .append(" constante_float\n");
-                parteDecimal = parteDecimal.substring(5);
+                        private String processarNumerosLongos(int pos, int linha, String texto) {
+                                StringBuilder numero = new StringBuilder();
+                                int i = pos;
+                                boolean temPonto = false;
 
-                while (!parteDecimal.isEmpty()) {
-                    int tamanho = Math.min(5, parteDecimal.length());
-                    resultado.append("Linha ").append(linha).append(": ")
-                            .append(parteDecimal.substring(0, tamanho)).append(" constante_int\n");
-                    parteDecimal = parteDecimal.substring(tamanho);
-                }
-            } else {
-                resultado.append("Linha ").append(linha).append(": ")
-                        .append(parteInteira).append(".").append(parteDecimal)
-                        .append(" constante_float\n");
-            }
-        } else {
-            String restante = numStr;
-            while (!restante.isEmpty()) {
-                int tamanho = Math.min(5, restante.length());
-                resultado.append("Linha ").append(linha).append(": ")
-                        .append(restante.substring(0, tamanho)).append(" constante_int\n");
-                restante = restante.substring(tamanho);
-            }
-        }
+                                while (i < texto.length() && (Character.isDigit(texto.charAt(i))
+                                                || (!temPonto && texto.charAt(i) == '.'))) {
+                                        if (texto.charAt(i) == '.') {
+                                                temPonto = true;
+                                        }
+                                        numero.append(texto.charAt(i));
+                                        i++;
+                                }
 
-        return resultado.toString();
-    }
-});
+                                String numStr = numero.toString();
+                                StringBuilder resultado = new StringBuilder();
+
+                                if (numStr.contains(".")) {
+                                        String[] partes = numStr.split("\\.");
+                                        String parteInteira = partes[0];
+                                        String parteDecimal = partes.length > 1 ? partes[1] : "";
+
+                                        while (parteInteira.length() > 5) {
+                                                resultado.append("Linha ").append(linha).append(": ")
+                                                                .append(parteInteira.substring(0, 5))
+                                                                .append(" constante_int\n");
+                                                parteInteira = parteInteira.substring(5);
+                                        }
+
+                                        if (parteDecimal.length() > 5) {
+                                                resultado.append("Linha ").append(linha).append(": ")
+                                                                .append(parteInteira).append(".")
+                                                                .append(parteDecimal.substring(0, 5))
+                                                                .append(" constante_float\n");
+                                                parteDecimal = parteDecimal.substring(5);
+
+                                                while (!parteDecimal.isEmpty()) {
+                                                        int tamanho = Math.min(5, parteDecimal.length());
+                                                        resultado.append("Linha ").append(linha).append(": ")
+                                                                        .append(parteDecimal.substring(0, tamanho))
+                                                                        .append(" constante_int\n");
+                                                        parteDecimal = parteDecimal.substring(tamanho);
+                                                }
+                                        } else {
+                                                resultado.append("Linha ").append(linha).append(": ")
+                                                                .append(parteInteira).append(".").append(parteDecimal)
+                                                                .append(" constante_float\n");
+                                        }
+                                } else {
+                                        String restante = numStr;
+                                        while (!restante.isEmpty()) {
+                                                int tamanho = Math.min(5, restante.length());
+                                                resultado.append("Linha ").append(linha).append(": ")
+                                                                .append(restante.substring(0, tamanho))
+                                                                .append(" constante_int\n");
+                                                restante = restante.substring(tamanho);
+                                        }
+                                }
+                                return resultado.toString();
+                        }
+                });
 
                 inputMap = mensagem.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
                 inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F7, 0), "compilar");
@@ -1092,7 +1156,7 @@ public class Interface_compilador {
                                                                 || token.matches(comentarioLinha))) {
 
                                                         if (token.startsWith("\"") && !token.endsWith("\"")) {
-                                                                mensagem.setText("linha " + numeroLinha + ": " + token
+                                                                mensagem.setText("linha " + numeroLinha + ": "
                                                                                 + " constante_string inválida\n");
                                                                 throw new ConstanteStringException(
                                                                                 "Constante String Invalida", token);
